@@ -1,5 +1,14 @@
 # NBT Evo ID6 apps
 
+## This fork: big-digit BoostDeck
+
+BoostDeck in this fork has a new layout: a wide boost bar with a 0 to 35 psi scale and red zone, gauge names and units, and big digit values drawn the same way ShiftDeck draws RPM. Ice Blue is the default theme. ShiftDeck and MHD Maps are unchanged.
+
+- **Installers:** `NBT-Evo-Gauges-macOS-universal.zip` and `NBT-Evo-Gauges-Windows-x64.zip` at the root. They are built from the Nov 7 prerelease payload with only BoostDeck changed. See [prebuilt/README.md](prebuilt/README.md) for exactly what changed and how to rebuild.
+- **Source:** `source/native/tools/make_bars.py` generates the layout, and `BoostDeck::drawValue()` in `source/native/src/plugin.cpp` draws the digits.
+- **Layout canvas:** 1280 × 480. Other screens are rescaled by the installer.
+- **Status:** checked on a host and in an ARM emulator, not yet on a car. Battery voltage isn't included because the collector doesn't read it.
+
 ## Gallery
 
 <table>

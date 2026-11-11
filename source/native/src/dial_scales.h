@@ -2,7 +2,11 @@
 static const unsigned kDialSteps = 32;
 static const unsigned kBarFirst = 55000;
 static const unsigned kMulticolor = 8;
-static const char *const kColorNames[] = {"BMW Orange", "Blue", "Green", "White", "Purple", "Pink", "Cyan", "Red", "Multicolor"};
+static const char *const kColorNames[] = {"Ice Blue", "Orange", "Green", "White", "Purple", "Pink", "Cyan", "Red", "Multicolor"};
+static const unsigned kDigitModel = 120;
+static const unsigned kDigitSmall = 57100;
+static const unsigned kDigitBig = 57120;
+static const bool kDigitDecimal[] = {1, 1, 1, 0, 0, 0, 0, 0};
 static const struct DialScale { double minimum, maximum; const char *name, *unit; } kDialScales[] = {
     {0, 35, "Boost", "psi"},
     {9, 19, "AFR", ""},

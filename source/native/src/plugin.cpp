@@ -94,7 +94,58 @@ public:
     }
     void refresh();
     void poll();
+    void drawValue(unsigned gauge, const char* text);
 };
+
+namespace {
+unsigned digitCode(char c) {
+    if (c>='0' && c<='9') return static_cast<unsigned>(c-'0');
+    if (c=='.') return 10u;
+    if (c=='-') return 11u;
+    return 12u;
+}
+}
+
+// Big digits, one image component per cell (same approach as ShiftDeck's RPM).
+// Decimal gauges fill cells "III.F"; the rest show a rounded whole number in
+// cells 1-4. Text is the value alone, e.g. "14.4", "2444" or "--".
+void BoostDeck::drawValue(unsigned gauge, const char* text) {
+    char cell[5]={' ',' ',' ',' ',' '};
+    char whole[8];
+    unsigned n=0, dot=0, k;
+    bool has_dot=false;
+    while (text[n] && n<15) {
+        if (text[n]=='.' && !has_dot) { has_dot=true; dot=n; }
+        ++n;
+    }
+    if (!has_dot) dot=n;
+    unsigned w=dot>6 ? 6 : dot;
+    for (k=0;k<w;++k) whole[k]=text[dot-w+k];
+    whole[w]=0;
+    if (kDigitDecimal[gauge]) {
+        for (k=0;k<3 && k<w;++k) cell[2-k]=whole[w-1-k];
+        if (has_dot) {
+            cell[3]='.';
+            cell[4]=text[dot+1] ? text[dot+1] : '0';
+        }
+    } else {
+        if (has_dot && text[dot+1]>='5' && text[dot+1]<='9') {
+            int j=static_cast<int>(w)-1;
+            while (j>=0 && whole[j]=='9') whole[j--]='0';
+            if (j>=0 && whole[j]>='0' && whole[j]<='8') ++whole[j];
+            else if (w<6) {  // 99.5 -> 100, -9.5 -> -10
+                unsigned at=(w && whole[0]=='-') ? 1u : 0u;
+                for (k=w+1;k>at;--k) whole[k]=whole[k-1];
+                whole[at]='1';
+                ++w;
+            }
+        }
+        for (k=0;k<4 && k<w;++k) cell[4-k]=whole[w-1-k];
+    }
+    const unsigned base=gauge==BD_BOOST ? kDigitBig : kDigitSmall;
+    for (k=0;k<5;++k)
+        updateModel(kDigitModel+gauge*5u+k,bmw::ImageID(base+digitCode(cell[k])));
+}
 
 bool BoostDeck::onInit() {
     shutdown();
@@ -223,14 +274,10 @@ void BoostDeck::refresh() {
         unsigned image = kBarFirst;
         if (received_ && bd_is_fresh(&frame_,i,elapsed)) {
             double x=frame_.value[i];
-            const char *prefix = frame_.demo && i==BD_BOOST ? "Demo " : "";
-            const char *unit_space = *scale.unit ? " " : "";
-            const char *format = i==BD_BOOST ? "%s%s   %+.1f%s%s"
-                                : i==BD_RAIL ? "%s%s   %.0f%s%s"
-                                : "%s%s   %.1f%s%s";
+            const char *format = i==BD_RAIL ? "%.0f" : "%.1f";
             double reading = bd_display_value(i,x,0);
             if (i==BD_BOOST && fabs(reading)<0.05) reading=0;
-            snprintf(label,sizeof label,format,prefix,scale.name,reading,unit_space,scale.unit);
+            snprintf(label,sizeof label,format,reading);
             double fraction=(x-scale.minimum)/(scale.maximum-scale.minimum);
             if (fraction<0) fraction=0;
             if (fraction>1) fraction=1;
@@ -240,14 +287,14 @@ void BoostDeck::refresh() {
                 image += palette*kDialSteps+step;
             }
         } else {
-            snprintf(label,sizeof label,"%s   --",scale.name);
+            strcpy(label,"--");
         }
         if (image!=images_[i]) {
             updateModel(60u+i,bmw::ImageID(image));
             images_[i]=image;
         }
         if (strcmp(label,labels_[i])) {
-            updateModel(50u+i,bmw::BasicString<char>(label));
+            drawValue(i,label);
             strcpy(labels_[i],label);
         }
     }

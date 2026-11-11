@@ -1,0 +1,2 @@
+ed2f28ce35e2980b0cf7494e71283b827c2da95adf4b3168949cf3c8a5c02224  NBT-Evo-Gauges-Windows-x64.zip
+da0ce61387d4693e235bdc7b3ef8eedd7b4829476c932064d1b8ae910acad9bd  NBT-Evo-Gauges-macOS-universal.zip
